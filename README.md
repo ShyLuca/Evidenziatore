@@ -2,7 +2,7 @@
 
 **Evidenziatore** è una potente e leggera estensione per Chrome che ti permette di evidenziare il testo su qualsiasi pagina web e salvare i tuoi evidenziamenti come **immagini PNG** o **documenti PDF**.
 
-Sviluppata con **Google Gemini 3 Pro**.
+Sviluppata con **Google Gemini 3 Pro**. (non sono un programmatore, avevo solo bisogno di questa estensione)
 
 ## Funzionalità
 
