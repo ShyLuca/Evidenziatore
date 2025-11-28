@@ -1,0 +1,42 @@
+{
+    "manifest_version": 3,
+    "name": "Evidenziatore",
+    "version": "1.3.7",
+    "description": "Evidenzia testo nelle pagine web e salva come PNG/PDF",
+    "icons": {
+        "16": "icon.png",
+        "32": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png"
+    },
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Evidenziatore"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "lib/html2canvas.min.js",
+                "lib/jspdf.umd.min.js",
+                "content.js"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "assets/*"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
