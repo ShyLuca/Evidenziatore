@@ -35,7 +35,7 @@
 5.  Click **Load unpacked** and select the extension folder.
 
 
-<br><br>
+<br>
 
 <img width="415" height="227" alt="Extension" src="https://github.com/user-attachments/assets/5b17ed55-be2d-4a2a-b594-de879f4eddc2" />
 
