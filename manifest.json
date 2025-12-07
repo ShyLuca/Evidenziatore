@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Evidenziatore",
-    "version": "1.4.0",
+    "version": "1.5.1",
     "description": "Highlight text on web pages and save as PNG/PDF",
     "icons": {
         "16": "icon.png",
