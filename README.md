@@ -12,8 +12,10 @@
 *   **Auto/Manual Mode**: Choose between instant highlighting (Auto) or using a popup menu (Manual).
 *   **Multiple Colors**: Choose from a palette of 5 vibrant colors (Yellow, Green, Blue, Red, Purple).
 *   **Smart Readability**: Automatically adjusts text color to black for perfect contrast on any background.
+*   **Auto-Save & Restore**: Never lose your work. Highlights are saved automatically and restored when you return.
+*   **Backup & Restore**: Export your highlights to JSON and restore them anytime, with smart redirection to the original page.
 *   **Save as PNG**: Capture highlighted text as a high-quality PNG image.
-*   **Save as PDF**: Export your highlights directly to a PDF document.
+*   **Save as PDF**: Export your highlights directly to a PDF document (with quality control).
 *   **Privacy**: Runs entirely locally in your browser. No data is sent to external servers.
 
 
