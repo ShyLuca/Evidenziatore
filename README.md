@@ -57,6 +57,8 @@
 
 ## Development
 
+See [CHANGELOG.md](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/CHANGELOG.md)
+
 This extension was built using:
 *   **Vanilla JavaScript**: No heavy frameworks, ensuring fast performance. (Version managed dynamically).
 *   **HTML5 & CSS3**: Clean, responsive interface with custom scrollbar.
