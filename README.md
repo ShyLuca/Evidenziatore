@@ -1,46 +1,47 @@
-# Evidenziatore - Estensione Chrome
+# Highlighter - Chrome Extension
 
-**Evidenziatore** è una potente e leggera estensione per Chrome che ti permette di evidenziare il testo su qualsiasi pagina web e salvare i tuoi evidenziamenti come **immagini PNG** o **documenti PDF**.
+**Highlighter** (Evidenziatore) is a powerful yet lightweight Chrome extension that allows you to highlight text on any web page and save your highlights as **PNG images** or **PDF documents**.
 
-Sviluppata con **Google Gemini 3 Pro**. (non sono un programmatore, avevo solo bisogno di questa estensione)
+## Features
 
-## Funzionalità
+*   **Global Toggle**: Enable/disable the extension completely with a single click. State persists across all sites.
+*   **3-State Theme Toggle**: Choose between Auto (follows system), Light, or Dark mode. Your preference is remembered.
+*   **Highlight Anything**: Select text on any web page to highlight it instantly.
+*   **Auto/Manual Mode**: Choose between instant highlighting (Auto) or using a popup menu (Manual).
+*   **Multiple Colors**: Choose from a palette of 5 vibrant colors (Yellow, Green, Blue, Red, Purple).
+*   **Smart Readability**: Automatically adjusts text color to black for perfect contrast on any background.
+*   **Save as PNG**: Capture highlighted text as a high-quality PNG image.
+*   **Save as PDF**: Export your highlights directly to a PDF document.
+*   **Privacy**: Runs entirely locally in your browser. No data is sent to external servers.
 
-*   **Evidenzia qualsiasi cosa**: Seleziona il testo su qualsiasi pagina web per evidenziarlo istantaneamente.
-*   **Molteplici colori**: Scegli tra una palette di 5 colori vivaci (Giallo, Verde, Blu, Rosso, Viola).
-*   **Leggibilità intelligente**: Regola automaticamente il colore del testo a nero per un contrasto perfetto su qualsiasi sfondo.
-*   **Salva come PNG**: Cattura il testo evidenziato come immagine PNG di alta qualità.
-*   **Salva come PDF**: Esporta i tuoi evidenziamenti direttamente in un documento PDF.
-*   **Modalità scura**: Interfaccia completamente supportata in modalità scura che si adatta alle preferenze di sistema.
-*   **Privacy**: Funziona interamente in locale nel tuo browser. Nessun dato viene inviato a server esterni.
+<img width="333" height="511" alt="Extension" src="https://github.com/user-attachments/assets/05078d43-a196-43d7-86c9-12ef3451d242" />
 
-<img width="333" height="511" alt="Estensione" src="https://github.com/user-attachments/assets/05078d43-a196-43d7-86c9-12ef3451d242" />
+## Installation
 
+1.  Clone this repository or download the source code.
+2.  Open Chrome and go to `chrome://extensions/`.
+3.  Enable **Developer Mode** in the top right corner.
+4.  Click **Load unpacked** and select the extension folder.
 
-## Installazione
+<img width="415" height="227" alt="Extension" src="https://github.com/user-attachments/assets/5b17ed55-be2d-4a2a-b594-de879f4eddc2" />
 
-1.  Clona questo repository o scarica il codice sorgente.
-2.  Apri Chrome e vai a `chrome://extensions/`.
-3.  Attiva la **Modalità sviluppatore** nell'angolo in alto a destra.
-4.  Fai clic su **Carica estensione non pacchettizzata** e seleziona la cartella dell'estensione.
+## Usage
 
-<img width="415" height="227" alt="Estensione" src="https://github.com/user-attachments/assets/5b17ed55-be2d-4a2a-b594-de879f4eddc2" />
+1.  Click the extension icon in the toolbar to open the popup.
+2.  Use the **Theme Toggle** (top right) to select Auto/Light/Dark mode.
+3.  Use the **Global Toggle** at the top to enable/disable the extension fully.
+4.  Choose between **Auto Mode** (instant highlight) or **Manual Mode** (popup menu).
+5.  Select a color from the palette.
+6.  Select text on any webpage to highlight it.
+7.  Use the "Save PNG" or "Save PDF" buttons to export your work.
 
-## Utilizzo
+## Development
 
-1.  Fai clic sull'icona dell'estensione nella barra degli strumenti per aprire il popup.
-2.  Seleziona un colore dalla palette.
-3.  Seleziona il testo su qualsiasi pagina web per evidenziarlo.
-4.  Usa i pulsanti "Salva PNG" o "Salva PDF" per esportare il tuo lavoro.
+This extension was built using:
+*   **Vanilla JavaScript**: No heavy frameworks, ensuring fast performance. (Version managed dynamically).
+*   **HTML5 & CSS3**: Clean, responsive interface with custom scrollbar.
+*   **html2canvas & jsPDF**: For reliable image and PDF generation.
 
-## Sviluppo
+## Credits
 
-Questa estensione è stata realizzata utilizzando:
-*   **Vanilla JavaScript**: Nessun framework pesante, garantendo prestazioni veloci.
-*   **HTML5 & CSS3**: Interfaccia pulita e responsiva.
-*   **html2canvas & jsPDF**: Per una generazione affidabile di immagini e PDF.
-
-## Crediti
-
-
-Sviluppata da Luca con l'assistenza di **Google Gemini 3 Pro**, un modello AI avanzato di Google DeepMind.
+Developed by Luca with the assistance of **Google Gemini 3 Pro**, an advanced AI model from Google DeepMind.  (Attributes: "I'm not a programmer, I just needed this extension")
