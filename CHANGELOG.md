@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.5.1] - 2025-12-07
+### Changed
+- **Default PDF Quality**: Set default PDF export quality to **Medium (Balanced)** to reduce file size while maintaining good readability.
+
+## [1.5.0] - 2025-12-07
+### Added
+- **Backup & Restore**: Full support for saving highlights to JSON and restoring them later.
+    - **Smart Restore**: If you restore a backup on a different page, the extension offers to redirect you to the original URL.
+    - **Robust Import**: Rewritten import logic to handle large datasets without freezing the browser (using batch processing).
+    - **Filename Customization**: Exports now include the page title and date (e.g., `PageTitle-2025-12-07.json`).
+- **Auto-Save**: Highlights are now saved silently in the background as you work.
+    - **Auto-Restore**: Highlights automatically reappear when you reload the page or reopen functionality tab.
+    - **Storage Reset**: "Clear All" correctly wipes the auto-saved data.
+- **System Protection**: The entire extension is automatically disabled on restricted pages (e.g., New Tab, Settings) to prevent errors and verify context.
+
+### Changed
+- **UI Refinements**: Redesigned the "Data & Backup" section to match the footer style (centered, cleaner look).
+- **Import Logic**: Moved file handling to the Content Script to strictly avoid Chrome message passing limits and crashes.
+
+### Fixed
+- **PDF Export**:
+    - **Ghost Page**: Fixed an issue where an empty extra page was sometimes generated in PDFs.
+    - **Export Freeze**: Added a safety timeout (12s) to prevent the "Exporting..." state from sticking indefinitely on complex pages.
+    - **Undo Logic**: Fixed an issue where changing text color via "Undo" didn't correctly reset the text color to black.
+
 ## [1.4.0] - 2025-12-07
 ### Added
 - **3-State Theme Toggle**: Theme button now cycles through Auto, Light, and Dark modes.
