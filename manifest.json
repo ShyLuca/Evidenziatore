@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
     "name": "Evidenziatore",
-    "version": "1.3.7",
-    "description": "Evidenzia testo nelle pagine web e salva come PNG/PDF",
+    "version": "1.4.0",
+    "description": "Highlight text on web pages and save as PNG/PDF",
     "icons": {
         "16": "icon.png",
         "32": "icon.png",
@@ -11,7 +11,8 @@
     },
     "permissions": [
         "activeTab",
-        "scripting"
+        "scripting",
+        "storage"
     ],
     "action": {
         "default_popup": "popup.html",
