@@ -2,6 +2,8 @@
 
 **Highlighter** (Evidenziatore) is a powerful yet lightweight Chrome extension that allows you to highlight text on any web page and save your highlights as **PNG images** or **PDF documents**.
 
+<br>
+
 ## Features
 
 *   **Global Toggle**: Enable/disable the extension completely with a single click. State persists across all sites.
@@ -15,14 +17,14 @@
 *   **Privacy**: Runs entirely locally in your browser. No data is sent to external servers.
 
 
-<br><br>
+<br>
 
 <img width="360" height="560" alt="image" src="https://github.com/user-attachments/assets/798de5fa-9316-4cd4-b841-1d71a2f8dae4" />
 
 
 <img width="360" height="560" alt="image" src="https://github.com/user-attachments/assets/ba83e577-b1c1-4d2b-af79-e617003fec67" />
 
-<br><br>
+<br>
 
 ## Installation
 
@@ -49,12 +51,16 @@
 6.  Select text on any webpage to highlight it.
 7.  Use the "Save PNG" or "Save PDF" buttons to export your work.
 
+<br>
+
 ## Development
 
 This extension was built using:
 *   **Vanilla JavaScript**: No heavy frameworks, ensuring fast performance. (Version managed dynamically).
 *   **HTML5 & CSS3**: Clean, responsive interface with custom scrollbar.
 *   **html2canvas & jsPDF**: For reliable image and PDF generation.
+  
+<br>
 
 ## Credits
 
