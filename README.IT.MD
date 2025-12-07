@@ -1,4 +1,4 @@
-[EN](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/README.md)
+Languages: 🇮🇹[IT](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/README.IT.md)🇮🇹  |  🇬🇧[EN](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/README.md)🇬🇧
 
 # Evidenziatore - Estensione per Chrome
 
