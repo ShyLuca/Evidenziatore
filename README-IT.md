@@ -59,7 +59,7 @@ Lingue: 🇮🇹 [IT](https://github.com/ShyLuca/Evidenziatore/blob/main/README-
 
 ## Sviluppo
 
-Vedi [CHANGELOG.md](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/CHANGELOG.md)
+Vedi [CHANGELOG.md](https://github.com/ShyLuca/Evidenziatore/blob/main/CHANGELOG.md)
 
 Questa estensione è stata costruita usando:
 *   **Vanilla JavaScript**: Nessun framework pesante, garantendo prestazioni veloci. (Versione gestita dinamicamente).
