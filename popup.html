@@ -104,6 +104,16 @@
         <!-- Tools -->
         <div class="section">
           <label>TOOLS</label>
+          <div style="margin-bottom: 12px;">
+            <label for="pdf-quality" style="display: block; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">PDF
+              Quality (PDF Only)</label>
+            <select id="pdf-quality"
+              style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--theme-surface); color: var(--theme-text); font-size: 12px; outline: none;">
+              <option value="high">High (Best Quality)</option>
+              <option value="medium" selected>Medium (Balanced)</option>
+              <option value="low">Low (Small Size)</option>
+            </select>
+          </div>
           <div class="grid-2">
             <button class="tool-btn" id="btn-png">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -158,6 +168,32 @@
         </div>
       </div>
     </main>
+
+
+    <!-- Data Management -->
+    <div class="section"
+      style="border-top: 1px solid var(--border-color); padding: 12px; margin-top: 0; text-align: center;">
+      <div class="grid-2" style="margin-bottom: 0;">
+        <button class="tool-btn small" id="btn-export-data" style="justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Back Up</span>
+        </button>
+        <button class="tool-btn small" id="btn-import-data" style="justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Restore</span>
+        </button>
+      </div>
+    </div>
 
     <div id="toast" class="toast hidden">Error</div>
 
