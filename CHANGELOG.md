@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.4.0] - 2025-12-07
+### Added
+- **3-State Theme Toggle**: Theme button now cycles through Auto, Light, and Dark modes.
+    - **Auto Mode**: Automatically follows system theme preference (indicated by star icon with 'A').
+    - **Light Mode**: Forces light theme regardless of system settings.
+    - **Dark Mode**: Forces dark theme regardless of system settings.
+    - Theme preference is saved and persists across sessions.
+    - System theme changes are detected and applied automatically when in Auto mode.
+
+## [1.3.9] - 2025-12-07
+### Changed
+- **Translation**: Complete English translation of the extension (UI, messages, and documentation).
+- **Mode UI**: Enhanced visual explanation of Manual vs Auto modes with clear status labels and descriptions.
+
+## [1.3.8] - 2025-12-07
+### Added
+- **Global Toggle**: Added a main switch to completely enable/disable the extension.
+    - State is saved via `chrome.storage` and persists across sites and restarts.
+    - When disabled, the popup UI is grayed out and all highlighting features are functionality disabled.
+    - The selection tooltip is no longer shown when the extension is disabled.
+### Changed
+- **UI Refinements**: Improved global toggle graphics and introduced a minimalist custom scrollbar.
+- **Internal**: Centralized version management. Now dynamically read from `manifest.json`.
+
 ## [1.3.7] - 2025-11-28
 ### Changed
 - Reverted to original icon (`icon.png`) for all sizes to ensure compatibility.
