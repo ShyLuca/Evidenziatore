@@ -14,7 +14,13 @@
 *   **Save as PDF**: Export your highlights directly to a PDF document.
 *   **Privacy**: Runs entirely locally in your browser. No data is sent to external servers.
 
-<img width="333" height="511" alt="Extension" src="https://github.com/user-attachments/assets/05078d43-a196-43d7-86c9-12ef3451d242" />
+
+<img width="360" height="560" alt="image" src="https://github.com/user-attachments/assets/798de5fa-9316-4cd4-b841-1d71a2f8dae4" />
+
+
+<img width="360" height="560" alt="image" src="https://github.com/user-attachments/assets/ba83e577-b1c1-4d2b-af79-e617003fec67" />
+
+
 
 ## Installation
 
