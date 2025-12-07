@@ -38,6 +38,28 @@ body {
   overflow: hidden;
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+body.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -98,19 +120,22 @@ header {
   background-color: var(--border-color);
 }
 
-.sun-icon {
+.sun-icon,
+.moon-icon,
+.auto-icon {
+  display: none;
+}
+
+/* Icon Visibility based on Preference */
+body[data-theme-pref="light"] .sun-icon {
   display: block;
 }
 
-.moon-icon {
-  display: none;
+body[data-theme-pref="dark"] .moon-icon {
+  display: block;
 }
 
-body.dark .sun-icon {
-  display: none;
-}
-
-body.dark .moon-icon {
+body[data-theme-pref="auto"] .auto-icon {
   display: block;
 }
 
@@ -133,13 +158,18 @@ main {
 
 .toggle-card {
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; Removed to prevent cutting off shadows/content */
 }
 
 .toggle-card.active {
-  background-color: var(--theme-surface);
-  border-color: var(--theme-border);
   color: var(--theme-text);
+  /* Use a subtle tint of the primary color instead of the hard muddy surface color */
+  background-color: color-mix(in srgb, var(--theme-primary) 15%, var(--card-bg)) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.toggle-card.active .mode-label {
+  color: var(--theme-text) !important;
 }
 
 .card-header {
@@ -147,6 +177,7 @@ main {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  gap: 10px;
 }
 
 .mode-label {
@@ -157,6 +188,8 @@ main {
   font-weight: 600;
   font-size: 14px;
   color: var(--theme-accent-text);
+  white-space: nowrap;
+  /* Prevent wrapping */
 }
 
 #mode-desc {
@@ -175,6 +208,8 @@ main {
   cursor: pointer;
   transition: background-color 0.3s;
   padding: 2px;
+  flex-shrink: 0;
+  /* Prevent switch from squishing */
 }
 
 body.dark .switch {
