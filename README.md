@@ -64,4 +64,4 @@ This extension was built using:
 
 ## Credits
 
-Developed by Luca with the assistance of **Google Gemini 3 Pro**, an advanced AI model from Google DeepMind.  (Attributes: "I'm not a programmer, I just needed this extension")
+Developed by Luca with the assistance of **Google Gemini 3 Pro**, an advanced AI model from Google DeepMind.  (I'm not a programmer yet)
