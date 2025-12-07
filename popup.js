@@ -1,9 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   // State
   const state = {
+    extensionEnabled: true, // Global
     autoMode: false,
     selectedColor: '#facc15', // Yellow default
-    darkMode: false,
+    themeMode: 'auto', // 'auto', 'light', 'dark'
+    darkMode: false, // Computed
     canUndo: false,
     canRedo: false
   };
@@ -69,9 +71,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Elements
   const themeToggle = document.getElementById('theme-toggle');
+
+  // Global Toggle Elements
+  const globalSwitch = document.getElementById('global-switch');
+  const globalCard = document.getElementById('global-card');
+  const globalText = document.getElementById('global-text');
+  const globalDesc = document.getElementById('global-desc');
+  const mainContent = document.getElementById('main-content');
+
   const modeSwitch = document.getElementById('mode-switch');
   const modeCard = document.getElementById('mode-card');
-  const modeText = document.getElementById('mode-text');
+  const modeStatus = document.getElementById('mode-status'); // Changed from modeText to modeStatus
   const modeDesc = document.getElementById('mode-desc');
   const colorBtns = document.querySelectorAll('.color-btn');
   const btnUndo = document.getElementById('btn-undo');
@@ -87,23 +97,24 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
 
   function init() {
-    // Theme
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(systemDark);
+    // Set Version from Manifest
+    const manifest = chrome.runtime.getManifest();
+    const versionSpan = document.getElementById('app-version');
+    if (versionSpan) {
+      versionSpan.textContent = `v${manifest.version}`;
+    }
 
-    // Load state from content script
-    sendMessage({ type: 'GET_STATUS' }, (response) => {
-      if (response) {
-        state.autoMode = response.isHighlighting;
-        state.selectedColor = response.activeColor;
-        state.canUndo = response.canUndo;
-        state.canRedo = response.canRedo;
-        applyColorTheme(state.selectedColor);
-        updateUI();
-      } else {
-        // Fallback if content script not ready
-        applyColorTheme(state.selectedColor);
-      }
+    // 1. Load Global State from Storage
+    chrome.storage.local.get(['extensionEnabled', 'themeMode'], (result) => {
+      // Default to true if undefined
+      state.extensionEnabled = result.extensionEnabled !== false;
+      updateGlobalUI();
+
+      // Load Theme Mode (default 'auto')
+      setThemeMode(result.themeMode || 'auto');
+
+      // 2. Load Content Script State
+      loadContentState();
     });
 
     // Listen for messages
@@ -111,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (message.type === 'GET_STATUS') {
         state.canUndo = message.payload.canUndo;
         state.canRedo = message.payload.canRedo;
-        // Also update color if it changed externally (though unlikely in this flow)
+        // Also update color if it changed externally
         if (message.payload.activeColor !== state.selectedColor) {
           state.selectedColor = message.payload.activeColor;
           applyColorTheme(state.selectedColor);
@@ -121,22 +132,67 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(message.payload);
       }
     });
+
+    // Listen for system theme changes if in auto mode
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (state.themeMode === 'auto') {
+        setTheme(e.matches);
+      }
+    });
+  }
+
+  function loadContentState() {
+    sendMessage({ type: 'GET_STATUS' }, (response) => {
+      if (response) {
+        state.autoMode = response.isHighlighting;
+        state.selectedColor = response.activeColor;
+        state.canUndo = response.canUndo;
+        state.canRedo = response.canRedo;
+        applyColorTheme(state.selectedColor);
+        updateUI();
+      } else {
+        // Fallback
+        applyColorTheme(state.selectedColor);
+      }
+    });
   }
 
   // Actions
   themeToggle.addEventListener('click', () => {
-    setTheme(!state.darkMode);
+    // Cycle: Auto -> Light -> Dark -> Auto
+    let nextMode = 'auto';
+    if (state.themeMode === 'auto') nextMode = 'light';
+    else if (state.themeMode === 'light') nextMode = 'dark';
+    else if (state.themeMode === 'dark') nextMode = 'auto';
+
+    setThemeMode(nextMode);
+    chrome.storage.local.set({ themeMode: nextMode });
+  });
+
+  // Global Switch Action
+  globalSwitch.addEventListener('click', () => {
+    state.extensionEnabled = !state.extensionEnabled;
+
+    // Save to storage
+    chrome.storage.local.set({ extensionEnabled: state.extensionEnabled });
+
+    // Notify content script
+    sendMessage({ type: 'TOGGLE_GLOBAL', payload: state.extensionEnabled });
+
+    updateGlobalUI();
   });
 
   modeSwitch.addEventListener('click', () => {
+    if (!state.extensionEnabled) return;
     state.autoMode = !state.autoMode;
     sendMessage({ type: 'TOGGLE_HIGHLIGHT', payload: state.autoMode });
     updateUI();
-    setStatus(state.autoMode ? 'MODALITÀ AUTOMATICA ATTIVA' : 'MODALITÀ MANUALE');
+    setStatus(state.autoMode ? 'AUTO MODE ACTIVE' : 'MANUAL MODE');
   });
 
   colorBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
+      if (!state.extensionEnabled) return;
       const color = e.target.dataset.color;
       state.selectedColor = color;
       applyColorTheme(color);
@@ -145,19 +201,71 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  btnUndo.addEventListener('click', () => sendMessage({ type: 'UNDO' }));
-  btnRedo.addEventListener('click', () => sendMessage({ type: 'REDO' }));
+  btnUndo.addEventListener('click', () => {
+    if (state.extensionEnabled) sendMessage({ type: 'UNDO' });
+  });
+  btnRedo.addEventListener('click', () => {
+    if (state.extensionEnabled) sendMessage({ type: 'REDO' });
+  });
 
   btnClear.addEventListener('click', () => {
+    if (!state.extensionEnabled) return;
     sendMessage({ type: 'CLEAR_HIGHLIGHTS' });
-    setStatus('PULITO!');
+    setStatus('CLEANED!');
     setTimeout(() => updateUI(), 1500);
   });
 
-  btnPng.addEventListener('click', () => handleExport('EXPORT_PNG'));
-  btnPdf.addEventListener('click', () => handleExport('EXPORT_PDF'));
+  btnPng.addEventListener('click', () => {
+    if (state.extensionEnabled) handleExport('EXPORT_PNG');
+  });
+  btnPdf.addEventListener('click', () => {
+    if (state.extensionEnabled) handleExport('EXPORT_PDF');
+  });
 
-  // Helpers
+  // UI Updaters
+  function updateGlobalUI() {
+    globalSwitch.setAttribute('aria-checked', state.extensionEnabled);
+
+    if (state.extensionEnabled) {
+      globalCard.classList.add('active');
+      globalText.textContent = 'Extension Enabled';
+      globalDesc.textContent = 'Turn off to disable on all sites.';
+
+      // Enable main content
+      mainContent.style.opacity = '1';
+      mainContent.style.pointerEvents = 'auto';
+      mainContent.style.filter = 'none';
+
+      setStatus(state.autoMode ? "AUTO MODE ACTIVE" : "SELECT TO HIGHLIGHT");
+    } else {
+      globalCard.classList.remove('active');
+      globalText.textContent = 'Extension Disabled';
+      globalDesc.textContent = 'Turn on to resume highlighting.';
+
+      // Disable main content
+      mainContent.style.opacity = '0.5';
+      mainContent.style.pointerEvents = 'none';
+      mainContent.style.filter = 'grayscale(100%)';
+
+      setStatus("EXTENSION DISABLED");
+    }
+  }
+
+  function setThemeMode(mode) {
+    state.themeMode = mode;
+    document.body.setAttribute('data-theme-pref', mode);
+
+    let isDark = false;
+    if (mode === 'auto') {
+      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } else if (mode === 'dark') {
+      isDark = true;
+    } else {
+      isDark = false; // light
+    }
+    setTheme(isDark);
+  }
+
   function setTheme(isDark) {
     state.darkMode = isDark;
     if (isDark) {
@@ -165,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       document.body.classList.remove('dark');
     }
-    // Re-apply color theme to handle dark mode values
     applyColorTheme(state.selectedColor);
   }
 
@@ -183,12 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // New deep theming
     root.style.setProperty('--bg-color', isDark ? theme.darkBgTint : theme.bgTint);
-    // We can also tint the text slightly if we want, but let's stick to background for now as requested "sfondo"
-    // Actually user asked for "scritte" too.
-    root.style.setProperty('--text-color', isDark ? theme.darkText : theme.text); // This might be too aggressive for all text.
-    // Let's use a specific variable for headings or accents instead of replacing global text color which might be too colorful.
-    // But user asked "cambiare il colore anche delle scritte". Let's try to be smart.
-    // We'll keep main text neutral but tint headers/labels.
     root.style.setProperty('--theme-accent-text', isDark ? theme.darkText : theme.text);
   }
 
@@ -197,12 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
     modeSwitch.setAttribute('aria-checked', state.autoMode);
     if (state.autoMode) {
       modeCard.classList.add('active');
-      modeText.textContent = 'Automatico';
-      modeDesc.textContent = 'Evidenziazione istantanea alla selezione.';
+      modeStatus.textContent = 'Auto'; // Updated
+      modeDesc.textContent = 'Instant highlight on selection.';
     } else {
       modeCard.classList.remove('active');
-      modeText.textContent = 'Manuale';
-      modeDesc.textContent = 'Seleziona testo per mostrare il menu.';
+      modeStatus.textContent = 'Manual'; // Updated
+      modeDesc.textContent = 'Select text to show the menu.';
     }
 
     // Color
@@ -218,9 +319,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnUndo.disabled = !state.canUndo;
     btnRedo.disabled = !state.canRedo;
 
-    // Status default
-    if (!statusText.textContent.includes('!')) {
-      statusText.textContent = state.autoMode ? "PRONTO ALL'USO" : "SELEZIONA PER EVIDENZIARE";
+    // Status default (if enabled)
+    if (state.extensionEnabled && !statusText.textContent.includes('!') && !statusText.textContent.includes('DISABLED')) {
+      statusText.textContent = state.autoMode ? "READY" : "SELECT TO HIGHLIGHT";
     }
   }
 
@@ -235,13 +336,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleExport(type) {
-    setStatus('GENERAZIONE IN CORSO...');
+    setStatus('GENERATING...');
     sendMessage({ type: type }, (response) => {
       if (response && response.status === 'error') {
-        showToast(response.message || 'Errore sconosciuto');
+        showToast(response.message || 'Unknown Error');
         updateUI();
       } else {
-        setStatus('COMPLETATO');
+        setStatus('COMPLETED');
         setTimeout(() => updateUI(), 2000);
       }
     });
