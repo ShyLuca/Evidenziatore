@@ -59,7 +59,7 @@ Languages: 🇮🇹 [IT](https://github.com/ShyLuca/Evidenziatore/blob/main/READ
 
 ## Development
 
-See [CHANGELOG.md](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/ShyLuca/Evidenziatore/blob/main/CHANGELOG.md)
 
 This extension was built using:
 *   **Vanilla JavaScript**: No heavy frameworks, ensuring fast performance. (Version managed dynamically).
