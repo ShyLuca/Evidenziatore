@@ -13,16 +13,74 @@ let redoStack = [];
 
 console.log("Evidenziatore Content Script Loaded");
 
+// --- AUTO-SAVE LOGIC ---
+let saveTimeout = null;
+
+function saveToStorage() {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        const highlights = serializeHighlights();
+        const key = `autosave_${window.location.href}`;
+        // If empty, we can either save empty or remove. Saving empty is safer for "clearing" state.
+        chrome.storage.local.set({
+            [key]: {
+                highlights: highlights,
+                timestamp: Date.now()
+            }
+        }, () => {
+            // Optional: console.log("Auto-saved");
+        });
+    }, 1000); // 1 second debounce
+}
+
 // Initialize State from Storage
 if (chrome.storage) {
     chrome.storage.local.get(['extensionEnabled'], (result) => {
         isExtensionEnabled = result.extensionEnabled !== false;
     });
 
+    // Auto-Restore Logic
+    const autoSaveKey = `autosave_${window.location.href}`;
+    chrome.storage.local.get([autoSaveKey], (result) => {
+        if (result[autoSaveKey] && result[autoSaveKey].highlights && result[autoSaveKey].highlights.length > 0) {
+            console.log("Restoring from auto-save...");
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(() => deserializeHighlights(result[autoSaveKey].highlights), 500);
+                });
+            } else {
+                setTimeout(() => deserializeHighlights(result[autoSaveKey].highlights), 500);
+            }
+        }
+    });
+
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local' && changes.extensionEnabled) {
             isExtensionEnabled = changes.extensionEnabled.newValue;
             if (!isExtensionEnabled) hideTooltip();
+        }
+    });
+
+    // Check for pending restore (Smart Restore)
+    chrome.storage.local.get(['pendingRestore'], (result) => {
+        if (result.pendingRestore) {
+            const { url, data } = result.pendingRestore;
+            // Clean up immediately
+            chrome.storage.local.remove('pendingRestore');
+
+            if (url === window.location.href) {
+                console.log("Applying pending restore...");
+                // Allow some time for DOM to stabilize/render?
+                // Depending on site, we might need to wait. 
+                // Using a small delay or checking document.readyState
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        setTimeout(() => deserializeHighlights(data), 500);
+                    });
+                } else {
+                    setTimeout(() => deserializeHighlights(data), 500);
+                }
+            }
         }
     });
 }
@@ -275,8 +333,12 @@ function robustUndo() {
     const el = document.querySelector(`span[data-highlight-id="${id}"]`);
     if (el) {
         el.dataset.savedColor = el.style.backgroundColor;
+        el.dataset.savedTextColor = el.style.color; // Save text color (likely black)
+
         el.style.backgroundColor = 'transparent';
+        el.style.color = ''; // Reset to inherit from parent/page
         el.style.boxShadow = 'none';
+
         redoStack.push(id);
     }
     broadcastStatus();
@@ -289,6 +351,7 @@ function robustRedo() {
     const el = document.querySelector(`span[data-highlight-id="${id}"]`);
     if (el) {
         el.style.backgroundColor = el.dataset.savedColor || defaultColor;
+        el.style.color = el.dataset.savedTextColor || '#000000'; // Restore text color
         el.style.boxShadow = '0 1px 1px rgba(0,0,0,0.1)';
         historyStack.push(id);
     }
@@ -305,6 +368,7 @@ function broadcastStatus() {
             canRedo: redoStack.length > 0
         }
     }).catch(() => { });
+    saveToStorage();
 }
 
 // --- EVENT LISTENERS ---
@@ -362,7 +426,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             broadcastStatus();
             break;
 
-        case 'CLEAR_HIGHLIGHTS':
+        case 'CLEAR_HIGHLIGHTS': {
             const highlights = document.querySelectorAll('.web-highlighter-mark');
             highlights.forEach(span => {
                 const parent = span.parentNode;
@@ -377,6 +441,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ status: 'cleaned' });
             broadcastStatus();
             break;
+        }
 
         case 'UNDO':
             robustUndo();
@@ -402,17 +467,123 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'EXPORT_PDF':
             hideTooltip();
-            capturePage('pdf', sendResponse);
+            capturePage('pdf', sendResponse, message.payload?.quality);
             return true;
+
+        case 'EXPORT_DATA': {
+            hideTooltip();
+            const highlights = serializeHighlights();
+            const exportData = {
+                url: window.location.href,
+                createdAt: new Date().toISOString(),
+                version: 1,
+                highlights: highlights
+            };
+
+            const blob = new Blob([JSON.stringify(exportData)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = getExportFilename('json');
+            a.click();
+            URL.revokeObjectURL(url);
+            sendResponse({ status: 'ok' });
+            break;
+        }
+
+        case 'TRIGGER_IMPORT': {
+            hideTooltip();
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    document.body.removeChild(input);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+
+                        // normalize data
+                        let highlights = [];
+                        let targetUrl = null;
+
+                        if (Array.isArray(json)) {
+                            // Legacy format
+                            highlights = json;
+                        } else if (json.highlights) {
+                            // New format
+                            highlights = json.highlights;
+                            targetUrl = json.url;
+                        }
+
+                        if (targetUrl && targetUrl !== window.location.href) {
+                            // Smart Redirect
+                            if (confirm(`This backup is for:\n${targetUrl}\n\nDo you want to go there to restore?`)) {
+                                chrome.storage.local.set({
+                                    pendingRestore: {
+                                        url: targetUrl,
+                                        data: highlights
+                                    }
+                                }, () => {
+                                    window.location.href = targetUrl;
+                                });
+                                return;
+                            }
+                        }
+
+                        deserializeHighlights(highlights);
+                        console.log("Import successful");
+                    } catch (err) {
+                        console.error("Import failed", err);
+                        alert("Failed to parse Import file.");
+                    } finally {
+                        document.body.removeChild(input);
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            input.click();
+            sendResponse({ status: 'opened' });
+            break;
+        }
     }
 });
 
+// Helper to generate filename: "Page Title - YYYY-MM-DD.ext"
+function getExportFilename(extension) {
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Sanitize title
+    let title = document.title || 'evidenziatore-export';
+    title = title.replace(/[^a-z0-9\u00C0-\u017F\s-]/gi, '_').replace(/\s+/g, '-').toLowerCase();
+
+    // Limit length
+    if (title.length > 50) title = title.substring(0, 50);
+
+    return `${title}-${dateStr}.${extension}`;
+}
+
 // --- EXPORT ---
-async function capturePage(format, sendResponse) {
+async function capturePage(format, sendResponse, quality = 'high') {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'visible';
+    const originalScrollX = window.scrollX;
+    const originalScrollY = window.scrollY;
 
     try {
+        window.scrollTo(0, 0);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Allow render to catch up
+
         if (window.location.protocol.startsWith('chrome')) {
             throw new Error("Cannot export Chrome system pages.");
         }
@@ -422,7 +593,12 @@ async function capturePage(format, sendResponse) {
             throw new Error("html2canvas library not loaded.");
         }
 
-        const canvas = await html2canvas(document.body, {
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Export timed out (page too large)")), 12000);
+        });
+
+        const canvasPromise = html2canvas(document.body, {
             useCORS: true,
             allowTaint: true,
             scrollY: -window.scrollY,
@@ -430,9 +606,12 @@ async function capturePage(format, sendResponse) {
             ignoreElements: (element) => element.id === 'evidenziatore-tooltip'
         });
 
+        // Race between export and timeout
+        const canvas = await Promise.race([canvasPromise, timeoutPromise]);
+
         if (format === 'png') {
             const link = document.createElement('a');
-            link.download = `evidenziatore-${Date.now()}.png`;
+            link.download = getExportFilename('png');
             link.href = canvas.toDataURL('image/png');
             link.click();
         } else if (format === 'pdf') {
@@ -443,7 +622,19 @@ async function capturePage(format, sendResponse) {
                 throw new Error("jsPDF library not loaded.");
             }
 
-            const imgData = canvas.toDataURL('image/png');
+            let imgData;
+            let imgFormat = 'PNG';
+
+            if (quality === 'medium') {
+                imgData = canvas.toDataURL('image/jpeg', 0.75);
+                imgFormat = 'JPEG';
+            } else if (quality === 'low') {
+                imgData = canvas.toDataURL('image/jpeg', 0.5);
+                imgFormat = 'JPEG';
+            } else {
+                imgData = canvas.toDataURL('image/png');
+            }
+
             const imgWidth = 210;
             const pageHeight = 295;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -452,17 +643,17 @@ async function capturePage(format, sendResponse) {
             let heightLeft = imgHeight;
             let position = 0;
 
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            pdf.addImage(imgData, imgFormat, 0, position, imgWidth, imgHeight);
             heightLeft -= pageHeight;
 
-            while (heightLeft >= 0) {
+            while (heightLeft > 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                pdf.addImage(imgData, imgFormat, 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
             }
 
-            pdf.save(`evidenziatore-${Date.now()}.pdf`);
+            pdf.save(getExportFilename('pdf'));
         }
         sendResponse({ status: 'done' });
     } catch (err) {
@@ -474,5 +665,181 @@ async function capturePage(format, sendResponse) {
         sendResponse({ status: 'error', message: err.message });
     } finally {
         document.body.style.overflow = originalOverflow;
+        window.scrollTo(originalScrollX, originalScrollY);
     }
+}
+
+// --- BACKUP & RESTORE ---
+
+// ... existing code ...
+
+function serializeHighlights() {
+    const highlights = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    let offset = 0;
+
+    let currentNode = walker.nextNode();
+    while (currentNode) {
+        const length = currentNode.textContent.length;
+        const parent = currentNode.parentElement;
+
+        if (parent && parent.classList.contains('web-highlighter-mark')) {
+            const id = parent.dataset.highlightId;
+            const color = parent.style.backgroundColor;
+
+            highlights.push({
+                start: offset,
+                end: offset + length,
+                color: color,
+                id: id
+            });
+        }
+
+        offset += length;
+        currentNode = walker.nextNode();
+    }
+    return highlights;
+}
+
+function deserializeHighlights(data) {
+    if (!Array.isArray(data)) return;
+
+    // 1. Sort ascending to map to text nodes efficiently
+    data.sort((a, b) => a.start - b.start);
+    const validData = data.filter(h => h.start < h.end);
+
+    const tasks = [];
+
+    // 2. Single Pass to collect Ranges
+    // We walk the DOM once to find all start/end nodes
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    let currentGlobalOffset = 0;
+    let node = walker.nextNode();
+    let dataIndex = 0;
+
+    while (node && dataIndex < validData.length) {
+        const nodeLength = node.textContent.length;
+        const nodeStart = currentGlobalOffset;
+        const nodeEnd = currentGlobalOffset + nodeLength;
+
+        // Check for all highlights that might start or end in this node
+        // (Since sorted by start, we only check the current queue head)
+
+        // Actually, we need to find the START and END node for each highlight.
+        // A highlight might span multiple nodes. 
+        // But our `serialize` split them into huge lists of segments?
+        // Yes, serialize logic produces segments per text node (or contiguous block).
+        // If we assumed segments, then each highlight fits in one node?
+        // My serializer implementation:
+        // `highlights.push({ start: offset, end: offset + length ... })`
+        // It pushes PER text node found in a wrapper.
+        // So NO highlight in the JSON should span multiple text nodes. 
+        // They are all local segments!
+        // This simplifies matched ranges massively.
+
+        while (dataIndex < validData.length) {
+            const h = validData[dataIndex];
+
+            // If highlight starts after this node ends, we need to advance the walker
+            if (h.start >= nodeEnd) {
+                break; // Move to next node
+            }
+
+            // If we are here, h.start < nodeEnd.
+            // Since we process in order, h.start >= nodeStart usually (unless overlap/unsorted, but we sorted).
+            // Actually, if we have overlaps, h.start could be < nodeStart?
+            // If h.start < nodeStart && h.end > nodeStart: intersection.
+
+            // Calculate intersection
+            const startInNode = Math.max(nodeStart, h.start);
+            const endInNode = Math.min(nodeEnd, h.end);
+
+            if (startInNode < endInNode) {
+                // Valid intersection found
+                const range = document.createRange();
+                range.setStart(node, startInNode - nodeStart);
+                range.setEnd(node, endInNode - nodeStart);
+
+                tasks.push({
+                    range: range,
+                    color: h.color,
+                    id: h.id
+                });
+            }
+
+            // If this highlight ends within (or at end of) this node, we are done with it.
+            if (h.end <= nodeEnd) {
+                dataIndex++;
+            } else {
+                // Highlight continues to next node?
+                // If serializer is segment-based, this shouldn't happen.
+                // But robust logic handles it: we just process the next node for the SAME highlight?
+                // No, `dataIndex` increments. 
+                // If a highlight spans multiple nodes, we should keep it for the next node?
+                // Complex.
+                // Re-reading logic: "findNodeAtGlobalOffset".
+                // If I switch to "Segment Match", I assume strict segments.
+                // Let's assume segment-based for now as my serializer produces segments.
+                // If I am importing data from elsewhere... treat safely.
+
+                // If h.end > nodeEnd, it spans. 
+                // We captured the part in this node.
+                // We should NOT increment dataIndex if we want to capture the rest in next node?
+                // But my loop structure `while (dataIndex ...)` implies processing one item.
+                // Better approach: filter candidates?
+
+                // Simplified: The serializer generates ONE entry per text node wrapped.
+                // So h.end <= nodeEnd is guaranteed for self-generated files.
+                dataIndex++;
+            }
+        }
+
+        currentGlobalOffset += nodeLength;
+        node = walker.nextNode();
+    }
+
+    // 3. Apply ranges in Reverse Order to preserve validity
+    tasks.reverse();
+
+    // Use a batching mechanism to avoid freezing UI if many tasks
+    const batchSize = 50;
+
+    function processBatch(startIndex) {
+        const endIndex = Math.min(startIndex + batchSize, tasks.length);
+        for (let i = startIndex; i < endIndex; i++) {
+            const task = tasks[i];
+            try {
+                // Ensure range is still valid (it should be if reverse applied)
+                if (task.range.collapsed) continue;
+                // Direct wrapping
+                // wrapRange(task.range, task.color, task.id || generateId());
+
+                // We must use `performHighlight` or `wrapRange`.
+                // `wrapRange` creates the span.
+                const span = document.createElement('span');
+                span.className = 'web-highlighter-mark';
+                span.dataset.highlightId = task.id || generateId();
+                span.style.backgroundColor = task.color;
+                span.style.color = '#000000';
+                span.style.textShadow = 'none';
+                span.style.borderRadius = '2px';
+                span.style.padding = '0 1px';
+                span.style.boxShadow = '0 1px 1px rgba(0,0,0,0.1)';
+
+                task.range.surroundContents(span);
+
+            } catch (e) {
+                console.warn("Batch apply error", e);
+            }
+        }
+
+        if (endIndex < tasks.length) {
+            requestAnimationFrame(() => processBatch(endIndex));
+        } else {
+            // Batch finished
+            saveToStorage();
+        }
+    }
+
+    processBatch(0);
 }
