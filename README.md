@@ -15,21 +15,29 @@
 *   **Privacy**: Runs entirely locally in your browser. No data is sent to external servers.
 
 
+<br><br>
+
 <img width="360" height="560" alt="image" src="https://github.com/user-attachments/assets/798de5fa-9316-4cd4-b841-1d71a2f8dae4" />
 
 
 <img width="360" height="560" alt="image" src="https://github.com/user-attachments/assets/ba83e577-b1c1-4d2b-af79-e617003fec67" />
 
-
+<br><br>
 
 ## Installation
 
 1.  Clone this repository or download the source code.
-2.  Open Chrome and go to `chrome://extensions/`.
-3.  Enable **Developer Mode** in the top right corner.
-4.  Click **Load unpacked** and select the extension folder.
+2.  Extract it in a safe folder.
+3.  Open Chrome and go to `chrome://extensions/`.
+4.  Enable **Developer Mode** in the top right corner.
+5.  Click **Load unpacked** and select the extension folder.
+
+
+<br><br>
 
 <img width="415" height="227" alt="Extension" src="https://github.com/user-attachments/assets/5b17ed55-be2d-4a2a-b594-de879f4eddc2" />
+
+<br><br>
 
 ## Usage
 
