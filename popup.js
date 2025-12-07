@@ -89,9 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnClear = document.getElementById('btn-clear');
   const btnPng = document.getElementById('btn-png');
   const btnPdf = document.getElementById('btn-pdf');
+  const pdfQuality = document.getElementById('pdf-quality');
+  const btnExportData = document.getElementById('btn-export-data');
+  const btnImportData = document.getElementById('btn-import-data');
   const statusText = document.getElementById('status-text');
   const toast = document.getElementById('toast');
   const iconBox = document.querySelector('.icon-box');
+  const paletteContainer = document.querySelector('.palette-container');
 
   // Initialize
   init();
@@ -103,6 +107,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (versionSpan) {
       versionSpan.textContent = `v${manifest.version}`;
     }
+
+    // Check if valid page for Backup/Restore
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      if (tab && (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:') || !tab.url)) {
+        disableEntireExtension();
+      }
+    });
+
+    function disableEntireExtension() {
+      // Disable Global Toggle and visually indicate unavailability
+      globalSwitch.disabled = true;
+      globalSwitch.setAttribute('aria-checked', 'false');
+      globalText.textContent = "Disabled on this page";
+      globalDesc.textContent = "Extension cannot run on system pages.";
+
+      mainContent.classList.add('disabled');
+      mainContent.style.opacity = '0.5';
+      mainContent.style.pointerEvents = 'none';
+
+      // Disable all inputs
+      const buttons = document.querySelectorAll('button, select');
+      buttons.forEach(btn => btn.disabled = true);
+
+      // Optionally show toast
+      showToast("Extension unavailable on system pages");
+    }
+
+
 
     // 1. Load Global State from Storage
     chrome.storage.local.get(['extensionEnabled', 'themeMode'], (result) => {
@@ -219,7 +252,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.extensionEnabled) handleExport('EXPORT_PNG');
   });
   btnPdf.addEventListener('click', () => {
-    if (state.extensionEnabled) handleExport('EXPORT_PDF');
+    if (state.extensionEnabled) handleExport('EXPORT_PDF', pdfQuality.value);
+  });
+
+  btnExportData.addEventListener('click', () => {
+    if (!state.extensionEnabled) return;
+    setStatus('EXPORTING DATA...');
+    sendMessage({ type: 'EXPORT_DATA' }, (response) => {
+      if (response && response.status === 'ok') {
+        setStatus('DATA EXPORTED');
+        setTimeout(() => updateUI(), 2000);
+      } else {
+        showToast(response?.message || 'Export Failed');
+      }
+    });
+  });
+
+  btnImportData.addEventListener('click', () => {
+    if (!state.extensionEnabled) return;
+    // Trigger import in content script to avoid passing huge data over message bus
+    sendMessage({ type: 'TRIGGER_IMPORT' });
+    window.close(); // Optional: close popup to let user interact with file dialog
   });
 
   // UI Updaters
@@ -315,6 +368,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Disable/Enable Palette based on mode
+    if (state.autoMode) {
+      paletteContainer.style.opacity = '1';
+      paletteContainer.style.pointerEvents = 'auto';
+      paletteContainer.style.filter = 'none';
+    } else {
+      paletteContainer.style.opacity = '0.5';
+      paletteContainer.style.pointerEvents = 'none';
+      paletteContainer.style.filter = 'grayscale(100%)';
+    }
+
     // Undo/Redo
     btnUndo.disabled = !state.canUndo;
     btnRedo.disabled = !state.canRedo;
@@ -335,9 +399,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => toast.classList.add('hidden'), 3000);
   }
 
-  function handleExport(type) {
+  function handleExport(type, quality = 'high') {
     setStatus('GENERATING...');
-    sendMessage({ type: type }, (response) => {
+    sendMessage({ type: type, payload: { quality } }, (response) => {
       if (response && response.status === 'error') {
         showToast(response.message || 'Unknown Error');
         updateUI();
