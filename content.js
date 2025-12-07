@@ -1,6 +1,7 @@
 // Evidenziatore Content Script
 
 // Global variables
+let isExtensionEnabled = true; // Default enabled
 let isAutoHighlighting = false;
 let defaultColor = '#facc15'; // Default yellow
 let tooltipElement = null;
@@ -11,6 +12,20 @@ let historyStack = [];
 let redoStack = [];
 
 console.log("Evidenziatore Content Script Loaded");
+
+// Initialize State from Storage
+if (chrome.storage) {
+    chrome.storage.local.get(['extensionEnabled'], (result) => {
+        isExtensionEnabled = result.extensionEnabled !== false;
+    });
+
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && changes.extensionEnabled) {
+            isExtensionEnabled = changes.extensionEnabled.newValue;
+            if (!isExtensionEnabled) hideTooltip();
+        }
+    });
+}
 
 // --- UTILS ---
 
@@ -295,6 +310,8 @@ function broadcastStatus() {
 // --- EVENT LISTENERS ---
 
 document.addEventListener('mouseup', (event) => {
+    if (!isExtensionEnabled) return;
+
     const selection = window.getSelection();
 
     if (tooltipElement && tooltipElement.contains(event.target)) {
@@ -319,6 +336,7 @@ document.addEventListener('mouseup', (event) => {
 });
 
 document.addEventListener('mousedown', (event) => {
+    if (!isExtensionEnabled) return;
     if (tooltipElement && !tooltipElement.contains(event.target)) {
         hideTooltip();
     }
@@ -326,6 +344,12 @@ document.addEventListener('mousedown', (event) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
+        case 'TOGGLE_GLOBAL':
+            isExtensionEnabled = message.payload;
+            if (!isExtensionEnabled) hideTooltip();
+            sendResponse({ status: 'ok' });
+            break;
+
         case 'TOGGLE_HIGHLIGHT':
             isAutoHighlighting = message.payload;
             if (isAutoHighlighting) hideTooltip();
@@ -390,12 +414,12 @@ async function capturePage(format, sendResponse) {
 
     try {
         if (window.location.protocol.startsWith('chrome')) {
-            throw new Error("Impossibile esportare pagine di sistema Chrome.");
+            throw new Error("Cannot export Chrome system pages.");
         }
 
         // Ensure html2canvas is loaded
         if (typeof html2canvas === 'undefined') {
-            throw new Error("Libreria html2canvas non caricata.");
+            throw new Error("html2canvas library not loaded.");
         }
 
         const canvas = await html2canvas(document.body, {
@@ -416,7 +440,7 @@ async function capturePage(format, sendResponse) {
             // jspdf.umd.min.js exposes window.jspdf.jsPDF
             const { jsPDF } = window.jspdf;
             if (!jsPDF) {
-                throw new Error("Libreria jsPDF non caricata.");
+                throw new Error("jsPDF library not loaded.");
             }
 
             const imgData = canvas.toDataURL('image/png');
@@ -445,7 +469,7 @@ async function capturePage(format, sendResponse) {
         console.error("Export failed", err);
         chrome.runtime.sendMessage({
             type: 'ERROR',
-            payload: "Errore esportazione: " + err.message
+            payload: "Export error: " + err.message
         });
         sendResponse({ status: 'error', message: err.message });
     } finally {
