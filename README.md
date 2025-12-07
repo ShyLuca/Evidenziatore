@@ -1,3 +1,5 @@
+[IT](https://github.com/ShyLuca/Evidenziatore/blob/5689fe8af37ad0edab5adbb452d7b22f808247f7/README.IT.md)
+
 # Evidenziatore - Chrome Extension
 
 **Evidenziatore** (Highlighter) is a powerful yet lightweight Chrome extension that allows you to highlight text on any web page and save your highlights as **PNG images** or **PDF documents**.
