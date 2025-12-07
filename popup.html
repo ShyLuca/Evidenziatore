@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -21,7 +21,7 @@
         </div>
         <div class="title-box">
           <h1>Evidenziatore</h1>
-          <span>v1.3.7</span>
+          <span id="app-version"></span>
         </div>
       </div>
       <button id="theme-toggle" aria-label="Toggle Dark Mode">
@@ -41,97 +41,128 @@
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
         </svg>
+        <svg class="auto-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Stylized Sun/Star (8 points) -->
+          <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z" style="display:none" />
+          <!-- Test path hidden -->
+
+          <!-- Octagon/Sun shape similar to image -->
+          <path
+            d="M12 3L14.5 5.5L18 6L18.5 9.5L21 12L18.5 14.5L18 18L14.5 18.5L12 21L9.5 18.5L6 18L5.5 14.5L3 12L5.5 9.5L6 6L9.5 5.5L12 3Z" />
+
+          <!-- 'A' inside - Perfectly Centered -->
+          <text x="12" y="12" dominant-baseline="central" text-anchor="middle" font-size="10" font-weight="bold"
+            fill="currentColor" stroke="none">A</text>
+        </svg>
       </button>
     </header>
 
     <main>
-      <!-- Mode Toggle -->
-      <div class="card toggle-card" id="mode-card">
+      <!-- Global Toggle -->
+      <div class="card toggle-card" id="global-card" style="margin-bottom: 0;">
         <div class="card-header">
           <span class="mode-label">
-            <span id="mode-text">Manuale</span>
+            <span id="global-text">Extension Enabled</span>
           </span>
-          <button id="mode-switch" class="switch" role="switch" aria-checked="false">
+          <button id="global-switch" class="switch" role="switch" aria-checked="true">
             <span class="switch-thumb"></span>
           </button>
-
         </div>
-        <p id="mode-desc">Seleziona testo per mostrare il menu.</p>
+        <p id="global-desc">Turn off to disable on all sites.</p>
       </div>
 
-      <!-- Palette -->
-      <div class="section">
-        <label>PALETTE</label>
-        <div class="palette-container">
-          <button class="color-btn" data-color="#facc15" style="background-color: #facc15;"></button>
-          <button class="color-btn" data-color="#4ade80" style="background-color: #4ade80;"></button>
-          <button class="color-btn" data-color="#38bdf8" style="background-color: #38bdf8;"></button>
-          <button class="color-btn" data-color="#fb7185" style="background-color: #fb7185;"></button>
-          <button class="color-btn" data-color="#a78bfa" style="background-color: #a78bfa;"></button>
-        </div>
-      </div>
-
-      <!-- Tools -->
-      <div class="section">
-        <label>STRUMENTI</label>
-        <div class="grid-2">
-          <button class="tool-btn" id="btn-png">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-              <polyline points="14 2 14 8 20 8" />
-              <circle cx="10" cy="13" r="2" />
-              <path d="m20 17-1.09-1.09a2 2 0 0 0-2.82 0L10 22" />
-            </svg>
-            <span>Salva PNG</span>
-          </button>
-          <button class="tool-btn" id="btn-pdf">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-              <polyline points="14 2 14 8 20 8" />
-              <path d="M10 13h4" />
-              <path d="M12 13v6" />
-            </svg>
-            <span>Salva PDF</span>
-          </button>
+      <div id="main-content" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Mode Toggle -->
+        <div class="card toggle-card" id="mode-card">
+          <div class="card-header">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span class="mode-label">Highlight Mode</span>
+              <span id="mode-status"
+                style="font-size: 11px; font-weight: 500; opacity: 0.8; color: var(--theme-primary);">Manual</span>
+            </div>
+            <button id="mode-switch" class="switch" role="switch" aria-checked="false">
+              <span class="switch-thumb"></span>
+            </button>
+          </div>
+          <p id="mode-desc" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color);">Select
+            text to show the menu.</p>
         </div>
 
-        <div class="grid-2">
-          <button class="tool-btn small" id="btn-undo" disabled>
+        <!-- Palette -->
+        <div class="section">
+          <label>PALETTE</label>
+          <div class="palette-container">
+            <button class="color-btn" data-color="#facc15" style="background-color: #facc15;"></button>
+            <button class="color-btn" data-color="#4ade80" style="background-color: #4ade80;"></button>
+            <button class="color-btn" data-color="#38bdf8" style="background-color: #38bdf8;"></button>
+            <button class="color-btn" data-color="#fb7185" style="background-color: #fb7185;"></button>
+            <button class="color-btn" data-color="#a78bfa" style="background-color: #a78bfa;"></button>
+          </div>
+        </div>
+
+        <!-- Tools -->
+        <div class="section">
+          <label>TOOLS</label>
+          <div class="grid-2">
+            <button class="tool-btn" id="btn-png">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <circle cx="10" cy="13" r="2" />
+                <path d="m20 17-1.09-1.09a2 2 0 0 0-2.82 0L10 22" />
+              </svg>
+              <span>Save PNG</span>
+            </button>
+            <button class="tool-btn" id="btn-pdf">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M10 13h4" />
+                <path d="M12 13v6" />
+              </svg>
+              <span>Save PDF</span>
+            </button>
+          </div>
+
+          <div class="grid-2">
+            <button class="tool-btn small" id="btn-undo" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7v6h6" />
+                <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+              </svg>
+              Undo
+            </button>
+            <button class="tool-btn small" id="btn-redo" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 7v6h-6" />
+                <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 3.7" />
+              </svg>
+              Redo
+            </button>
+          </div>
+
+          <button class="tool-btn danger" id="btn-clear">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7v6h6" />
-              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
             </svg>
-            Indietro
-          </button>
-          <button class="tool-btn small" id="btn-redo" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 7v6h-6" />
-              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 3.7" />
-            </svg>
-            Avanti
+            Clear All
           </button>
         </div>
-
-        <button class="tool-btn danger" id="btn-clear">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18" />
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          </svg>
-          Rimuovi tutto
-        </button>
       </div>
     </main>
 
-    <div id="toast" class="toast hidden">Errore</div>
+    <div id="toast" class="toast hidden">Error</div>
 
     <footer>
-      <p id="status-text">SELEZIONA PER EVIDENZIARE</p>
+      <p id="status-text">SELECT TO HIGHLIGHT</p>
     </footer>
   </div>
   <script src="popup.js"></script>
