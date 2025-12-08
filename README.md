@@ -70,4 +70,4 @@ This extension was built using:
 
 ## Credits
 
-Developed by Luca with the assistance of **Google Gemini 3 Pro**, an advanced AI model from Google DeepMind.  (I'm not a programmer yet)
+Developed by Luca with the assistance of **Google Gemini 3 Pro**, an advanced AI model from Google DeepMind.  (I'm not a dev yet)
